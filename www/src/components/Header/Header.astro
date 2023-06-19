@@ -33,10 +33,37 @@ const lang = getLanguageFromURL(currentPage);
 			</a>
 		</div>
 		{KNOWN_LANGUAGE_CODES.length > 1 && <LanguageSelect lang={lang} client:idle />}
-		<!-- <div class="search-item"> -->
+		<div class="search-item">
 			<!-- <Search client:idle /> -->
-		<!-- </div> -->
+			<input id="search" type="text" placeholder="Search...">
+		</div>
 	</nav>
+	<script is:inline>
+  document.querySelector('#search')?.addEventListener('input', async (e) => {
+    // only load the pagefind script once
+    if (e.target.dataset.loaded !== 'true') {
+      e.target.dataset.loaded = 'true'
+      // load the pagefind script
+      window.pagefind = await import("/en/pagefind/pagefind.js");
+    }
+
+    // search the index using the input value
+    const search = await window.pagefind.search(e.target.value)
+
+    // clear the old results
+    document.querySelector('#results').innerHTML = ''
+
+    // add the new results
+    for (const result of search.results) {
+      const data = await result.data()
+      document.querySelector('#results').innerHTML += `
+        <a href="${data.url}">
+          <h3>${data.meta.title}</h3>
+          <p>${data.excerpt}</p>
+        </a>`
+    }
+  })
+</script>
 </header>
 
 <style>
